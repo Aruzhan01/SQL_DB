@@ -1,0 +1,278 @@
+/*Скрипты для практики для БД Theme8lesson20*/
+
+/* Таблица Employee содержит зарплату всех сотрудников. У каждого сотрудника есть Id, зарплата, а также есть столбец для Id отдела.
+
++----+-------+--------+--------------+
+| Id | Name  | Salary | DepartmentId |
++----+-------+--------+--------------+
+| 1  | Joe   | 70000  | 1            |
+| 2  | Jim   | 90000  | 1            |
+| 3  | Henry | 80000  | 2            |
+| 4  | Sam   | 60000  | 2            |
+| 5  | Max   | 90000  | 1            |
++----+-------+--------+--------------+
+   Таблица Department содержит названия и ID департаментов. 
+
++----+----------+
+| Id | Name     |
++----+----------+
+| 1  | IT       |
+| 2  | Sales    |
++----+----------+
+Напишите запрос SQL, чтобы найти сотрудников с самой высокой зарплатой в каждом из отделов. Для приведенных выше таблиц ваш 
+SQL-запрос должен возвращать следующие строки (порядок строк не имеет значения).
+
++------------+----------+--------+
+| Department | Employee | Salary |
++------------+----------+--------+
+| IT         | Max      | 90000  |
+| IT         | Jim      | 90000  |
+| Sales      | Henry    | 80000  |
++------------+----------+--------+
+Объяснение:
+
+У Макса и Джима самая высокая зарплата в ИТ-отделе, а у Генри самая высокая зарплата в отделе продаж.
+*/
+create database Theme8lesson20
+-- Create table Employee
+Create table Employee 
+ (Id int not null, Name varchar (50),Salary varchar (50), DepartmentId int not null)
+
+-- Create table Department
+Create table Department 
+ (Id int not null, Name varchar (50))
+
+-- Insert values into table Employee
+USE [Theme8lesson20]
+Insert into Employee values (1, 'Joe', 70000, 1)
+Insert into Employee values (2, 'Jim', 90000, 1)
+Insert into Employee values (3, 'Henry', 80000, 2)
+Insert into Employee values (4, 'Sam', 60000, 2)
+Insert into Employee values (5, 'Max', 90000, 1)
+
+-- Insert values into table Department
+USE [Theme8lesson20]
+Insert into Department values (1, 'IT')
+Insert into Department values (2, 'Sales')
+
+--решение
+SELECT 
+	D.Name AS Department, 
+	E.Name AS Employee, 
+	E.Salary
+FROM Department D
+JOIN Employee E
+ON E.DepartmentID = D.Id AND 
+   E.Salary = (SELECT MAX(Salary) 
+               FROM Employee E2
+               WHERE E2.DepartmentId = D.Id )
+ORDER BY E.Salary DESC
+/*Напишите SQL-запрос для рэнкинга оценок в таблице Scores. Если два результата равны, оба должны иметь одинаковый рейтинг. 
+Обратите внимание, что после ничьей следующим порядковым номером должно быть следующее последовательное целочисленное значение. 
+То есть между рядами не должно быть «дыр».
+
++----+-------+
+| Id | Score |
++----+-------+
+| 1  | 3.50  |
+| 2  | 3.65  |
+| 3  | 4.00  |
+| 4  | 3.85  |
+| 5  | 4.00  |
+| 6  | 3.65  |
++----+-------+
+
+Например, учитывая приведенную выше таблицу оценок, ваш запрос должен создать следующий отчет (в порядке наивысшего балла):
+
++-------+---------+
+| score | Rank    |
++-------+---------+
+| 4.00  | 1       |
+| 4.00  | 1       |
+| 3.85  | 2       |
+| 3.65  | 3       |
+| 3.65  | 3       |
+| 3.50  | 4       |
++-------+---------+
+*/
+
+-- Create table Scores
+Create table Scores 
+(Id int not null, Score decimal (3,2))
+
+-- Insert values into table Scores
+USE [Theme8lesson20]
+Insert into Scores values (1, 3.50)
+Insert into Scores values (2, 3.65)
+Insert into Scores values (3, 4.00)
+Insert into Scores values (4, 3.85)
+Insert into Scores values (5, 4.00)
+Insert into Scores values (6, 3.65)
+
+--решение
+
+
+SELECT 
+	S2.Score, 
+	(SELECT COUNT(DISTINCT S1.Score) 
+FROM Scores S1
+	WHERE S1.Score >= S2.Score ) AS Rank
+FROM Scores S2
+ORDER BY Rank
+
+SELECT
+	Score, DENSE_RANK() OVER(ORDER BY Score DESC) as 'Rank' from Scores
+/* Таблица Stadium
+
++---------------+---------+
+| Column Name   | Type    |
++---------------+---------+
+| id            | int     |
+| visit_date    | date    |
+| people        | int     |
++---------------+---------+
+
+visit_date - это первичный ключ для этой таблицы.
+Каждая строка этой таблицы содержит дату посещения и идентификатор посещения стадиона с количеством человек во время посещения.
+Никакие две строки не будут иметь одинаковую дату посещения, и по мере увеличения идентификатора даты также увеличиваются.
+
+Напишите запрос SQL для отображения записей с тремя или более строками с последовательными идентификаторами, и количество людей больше 
+или равно 100 для каждой.
+
+Результат должен быть просортирован по visit_date в возрастающем порядке.
+
+Формат результата запроса показан в следующем примере.
+
+Stadium table:
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 1    | 2017-01-01 | 10        |
+| 2    | 2017-01-02 | 109       |
+| 3    | 2017-01-03 | 150       |
+| 4    | 2017-01-04 | 99        |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
++------+------------+-----------+
+--SOLUTION
+
+
+
+Результат:
++------+------------+-----------+
+| id   | visit_date | people    |
++------+------------+-----------+
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
++------+------------+-----------+
+
+
+Четыре строки с идентификаторами 5, 6, 7 и 8 имеют последовательные идентификаторы, и в каждой из них присутствовало> = 100 человек. 
+Обратите внимание, что строка 8 была включена, хотя visit_date не был на следующий день после строки 7.
+Строки с идентификаторами 2 и 3 не включаются, потому что нам нужно как минимум три последовательных идентификатора.
+*/
+
+
+-- Create table StadiumTable
+Create table StadiumTable 
+(id int not null, visit_date date, people int not null)
+
+-- Insert values into table StadiumTable
+USE [Theme8lesson20]
+Insert into StadiumTable values (1, '2017-01-01', 10)
+Insert into StadiumTable values (2, '2017-01-02', 109)
+Insert into StadiumTable values (3, '2017-01-03', 150)
+Insert into StadiumTable values (4, '2017-01-04', 99)
+Insert into StadiumTable values (5, '2017-01-05', 145)
+Insert into StadiumTable values (6, '2017-01-06', 1455)
+Insert into StadiumTable values (7, '2017-01-07', 199)
+Insert into StadiumTable values (8, '2017-01-09', 188)
+
+WITH CTE_T as 
+(
+		SELECT id, 
+			   visit_date, 
+			   people, 
+			   LAG(id,1) OVER(order by id) as prevID_1, 
+			   LAG(id,2) OVER(order by id) as prevID_2,
+			   LEAD(id,1) OVER(order by id) as nextID_1, 
+			   LEAD(id,2) OVER(order by id) as nextID_2
+		FROM StadiumTable
+		WHERE people>=100
+), 
+ORDERED_CTE as
+(
+	SELECT *, 
+		   CASE WHEN id+1=nextID_1 AND id+2 = nextID_2 then 'Y' 
+				WHEN id-1=prevID_1 AND id-2 = prevID_2 then 'Y' 
+				WHEN id-1 = prevID_1 and id+1=nextID_1 then 'Y'
+				ELSE 'N' END as flag
+	FROM CTE_T
+)
+	SELECT 
+		id, visit_date, people 
+	FROM
+		ORDERED_CTE where flag = 'Y'
+
+
+/* Есть таблица курсов с колонками: ученик и класс.
+
+Пожалуйста, перечислите все классы, в которых обучается не менее 5 человек.
+
+Например, таблица:
+
++ --------- + ------------ +
+| студент   | класс        |
++ --------- + ------------ +
+| А         | Математика   |
+| B         | Английский   |
+| C         | Математика   |
+| D         | Биология     |
+| E         | Математика   |
+| F         | Компьютер    |
+| G         | Математика   |
+| H         | Математика   |
+| Я         | Математика   |
++ --------- + ------------ +
+
+Должен выводить:
+
++ --------- +
+| класс     |
++ --------- +
+| Математика|
++ --------- +
+
+Примечание:
+Студенты не должны считаться дублирующимися на каждом курсе.
+*/
+
+-- Create table Courses
+CREATE table Courses 
+(Student varchar(50),Class varchar(50))
+
+-- Insert values into table Courses
+USE [Theme8lesson20]
+Insert into Courses values ('A', 'Математика')
+Insert into Courses values ('B', 'Английский')
+Insert into Courses values ('C','Математика')
+Insert into Courses values ('D', 'Биология')
+Insert into Courses values ('E', 'Математика')
+Insert into Courses values ('F', 'Компьютер')
+Insert into Courses values ('G', 'Математика')
+Insert into Courses values ('H', 'Математика')
+Insert into Courses values ('Я', 'Математика')
+
+
+SELECT * FROM Courses
+
+SELECT
+    Class 
+FROM 
+    Courses 
+GROUP BY class 
+HAVING COUNT(distinct Student) >= 5
